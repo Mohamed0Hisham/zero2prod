@@ -14,14 +14,17 @@ pub async fn subscribe(form: web::Form<FormData>, pool: web::Data<PgPool>) -> Ht
         return HttpResponse::BadRequest().finish();
     }
 
-    match sqlx::query!(
-        r#"INSERT INTO subscriptions(id,email,name,created_at)
-        VALUES($1,$2,$3,$4)"#,
-        Uuid::new_v4(),
-        form.email,
-        form.name,
-        Utc::now()
+    // Using sqlx::query() requires chaining .bind() for each parameter
+    match sqlx::query(
+        r#"
+        INSERT INTO subscriptions (id, email, name, created_at)
+        VALUES ($1, $2, $3, $4)
+        "#,
     )
+    .bind(Uuid::new_v4())
+    .bind(&form.email)
+    .bind(&form.name)
+    .bind(Utc::now())
     .execute(pool.get_ref())
     .await
     {

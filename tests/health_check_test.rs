@@ -1,8 +1,7 @@
-use sqlx::{Connection, Executor, PgConnection, PgPool};
-use std::net::TcpListener;
+use sqlx::{Connection, Executor, PgConnection, PgPool, Row, migrate::Migrator};
+use std::{net::TcpListener, path::Path};
 use uuid::Uuid;
 use zero2prod::configuration::{DatabaseSettings, get_configuration};
-
 #[tokio::test]
 async fn health_check_works() {
     //Arrange
@@ -36,13 +35,16 @@ async fn subscribe_returns_a_200_for_valid_form_data() {
         .expect("Failed to execute request.");
     assert_eq!(200, response.status().as_u16());
 
-    let saved_record = sqlx::query!("SELECT email, name FROM subscriptions")
+    let saved_record = sqlx::query("SELECT email, name FROM subscriptions")
         .fetch_one(&test_app.db_pool)
         .await
         .expect("Failed to fetch saved record");
 
-    assert_eq!(saved_record.email, "ursula_le_guin@gmail.com");
-    assert_eq!(saved_record.name, "le guin");
+    let email: String = saved_record.get("email");
+    let name: String = saved_record.get("name");
+
+    assert_eq!(email, "ursula_le_guin@gmail.com");
+    assert_eq!(name, "le guin");
 }
 
 #[tokio::test]
@@ -114,7 +116,12 @@ pub async fn configure_database(config: &DatabaseSettings) -> PgPool {
     let connection_pool = PgPool::connect(&config.connection_string())
         .await
         .expect("Failed to connect to Postgres.");
-    sqlx::migrate!("./migrations")
+
+    let migrator = Migrator::new(Path::new("./migrations"))
+        .await
+        .expect("Failed to create migrator");
+
+    migrator
         .run(&connection_pool)
         .await
         .expect("Failed to migrate the database");
