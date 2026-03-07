@@ -72,7 +72,7 @@ jobs:
       - uses: Swatinem/rust-cache@v2
 
       - name: Install sqlx-cli
-        run: taiki-e/install-action@sqlx-cli
+        run: cargo install sqlx-cli
           --version=${{ env.SQLX_VERSION }}
           --features ${{ env.SQLX_FEATURES }}
           --no-default-features
@@ -130,7 +130,7 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
-      - run: taiki-e/install-action@sqlx-cli
+      - run: cargo install sqlx-cli
           --version=${{ env.SQLX_VERSION }}
           --features ${{ env.SQLX_FEATURES }}
           --no-default-features
