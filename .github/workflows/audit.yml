@@ -1,4 +1,5 @@
-name: Security audit
+name: Security Audit
+
 on:
   schedule:
     - cron: "0 0 * * *"
@@ -6,11 +7,16 @@ on:
     paths:
       - "**/Cargo.toml"
       - "**/Cargo.lock"
+
 jobs:
   security_audit:
+    name: Security Audit
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - uses: taiki-e/install-action@cargo-deny
+      - uses: actions/checkout@v4
+
+      - name: Install cargo-deny
+        uses: taiki-e/install-action@cargo-deny
+
       - name: Scan for vulnerabilities
         run: cargo deny check advisories
