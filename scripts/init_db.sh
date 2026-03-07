@@ -10,38 +10,47 @@ fi
 if ! [ -x "$(command -v sqlx)" ]; then
     echo >&2 "Error: sqlx is not installed."
     echo >&2 "Use:"
-    echo >&2 " cargo install --version=0.5.7 sqlx-cli --no-default-features --features postgres"
+    echo >&2 " cargo install sqlx-cli --no-default-features --features postgres"
     echo >&2 "to install it."
+    exit 1  # <-- was missing, script continued without sqlx!
 fi
 
 # Check if a custom user has been set, otherwise default to 'postgres'
 DB_USER=${POSTGRES_USER:=postgres}
-# Check if a custom password has been set, otherwise default to 'password'
 DB_PASSWORD="${POSTGRES_PASSWORD:=password}"
-# Check if a custom database name has been set, otherwise default to 'newsletter'
 DB_NAME="${POSTGRES_DB:=newsletter}"
-# Check if a custom port has been set, otherwise default to '5432'
 DB_PORT="${POSTGRES_PORT:=5432}"
+DB_HOST="${POSTGRES_HOST:=localhost}"
 
-# Launch postgres using Docker
-docker run \
-  -e POSTGRES_USER=${DB_USER} \
-  -e POSTGRES_PASSWORD=${DB_PASSWORD} \
-  -e POSTGRES_DB=${DB_NAME} \
-  -p "${DB_PORT}":5432 \
-  -d postgres \
-  postgres -N 1000
-# ^ Increased maximum number of connections for testing purposes
+# Launch postgres using Docker (skipped in CI)
+if [[ -z "${SKIP_DOCKER}" ]]; then
+  docker run \
+    -e POSTGRES_USER=${DB_USER} \
+    -e POSTGRES_PASSWORD=${DB_PASSWORD} \
+    -e POSTGRES_DB=${DB_NAME} \
+    -p "${DB_PORT}":5432 \
+    -d postgres \
+    postgres -N 1000
 
-# Keep pinging Postgres until it's ready to accept commands
-export PGPASSWORD="${DB_PASSWORD}"
-until psql -h "localhost" -U "${DB_USER}" -p "${DB_PORT}" -d "postgres" -c '\q'; do
-    >&2 echo "Postgres is still unavailable/sleeping"
+  # Wait for Docker postgres to be ready
+  export PGPASSWORD="${DB_PASSWORD}"
+  until psql -h "${DB_HOST}" -U "${DB_USER}" -p "${DB_PORT}" -d "postgres" -c '\q'; do
+    >&2 echo "Postgres is unavailable - sleeping"
     sleep 1
-done
-    >&2 echo "Postgres is up and running on port ${DB_PORT}!"
+  done
+fi
 
-export DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@localhost:${DB_PORT}/${DB_NAME}
+>&2 echo "Postgres is up and running on port ${DB_PORT}!"
+
+DATABASE_URL=postgres://${DB_USER}:${DB_PASSWORD}@${DB_HOST}:${DB_PORT}/${DB_NAME}
+export DATABASE_URL
+
+# This exports DATABASE_URL into the GitHub Actions environment
+# so subsequent steps can use it too
+if [[ -n "${GITHUB_ENV}" ]]; then
+  echo "DATABASE_URL=${DATABASE_URL}" >> "${GITHUB_ENV}"
+fi
+
 sqlx database create
 sqlx migrate run
 >&2 echo "Postgres has been migrated, ready to go!"
