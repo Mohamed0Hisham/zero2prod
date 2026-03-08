@@ -1,30 +1,28 @@
 use sqlx::PgPool;
 use std::net::TcpListener;
-use tracing::dispatcher::{self, Dispatch};
-use tracing_bunyan_formatter::{BunyanFormattingLayer, JsonStorageLayer};
-use tracing_subscriber::{EnvFilter, Registry, layer::SubscriberExt};
 use zero2prod::configuration::get_configuration;
 use zero2prod::startup::run;
+use zero2prod::telemetry::{get_subscriber, init_subscriber};
 
+fn create_listener(port: &u16) -> TcpListener {
+    let address = format!("127.0.0.1:{}", port);
+    TcpListener::bind(&address).expect("Failed to bind to address")
+}
+
+async fn create_db_pool(connection_string: &str) -> PgPool {
+    PgPool::connect(connection_string)
+        .await
+        .expect("Failed to connect to the database")
+}
 
 #[tokio::main]
 async fn main() -> std::io::Result<()> {
-    tracing_log::LogTracer::init().expect("Failed to set logger");
-    let env_filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info"));
-    let formatting_layer = BunyanFormattingLayer::new("zero2prod".into(), std::io::stdout);
-    let subscriber = Registry::default()
-        .with(env_filter)
-        .with(JsonStorageLayer)
-        .with(formatting_layer);
-    dispatcher::set_global_default(Dispatch::new(subscriber))
-        .expect("Failed to set tracing subscriber");
+    let subscriber = get_subscriber("zero2prod".into(), "info".into());
+    init_subscriber(subscriber);
 
     let configuration = get_configuration().expect("Failed to read configuration file");
-    let address = format!("127.0.0.1:{}", configuration.application_port);
-    let listener = TcpListener::bind(address).expect("Failed to bind random port");
-    let db_connection = PgPool::connect(&configuration.database.connection_string())
-        .await
-        .expect("Failed to connect to the Database");
+    let listener = create_listener(&configuration.application_port);
+    let db_pool = create_db_pool(&configuration.database.connection_string()).await;
 
-    run(listener, db_connection)?.await
+    run(listener, db_pool)?.await
 }
