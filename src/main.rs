@@ -1,3 +1,4 @@
+use secrecy::ExposeSecret;
 use sqlx::PgPool;
 use std::net::TcpListener;
 use zero2prod::configuration::get_configuration;
@@ -22,7 +23,7 @@ async fn main() -> std::io::Result<()> {
 
     let configuration = get_configuration().expect("Failed to read configuration file");
     let listener = create_listener(&configuration.application_port);
-    let db_pool = create_db_pool(&configuration.database.connection_string()).await;
+    let db_pool = create_db_pool(&configuration.database.connection_string().expose_secret()).await;
 
     run(listener, db_pool)?.await
 }
