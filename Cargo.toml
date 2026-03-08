@@ -25,6 +25,7 @@ tracing-bunyan-formatter = "0.3"
 tracing-log = "0.1"
 config = "0.15.19"
 secrecy = {version = "0.10.3", features = ["serde"]}
+tracing-actix-web = "0.7.21"
 
 [dependencies.sqlx]
 version = "0.8.6"
