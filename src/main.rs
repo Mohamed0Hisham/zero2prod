@@ -1,5 +1,6 @@
 use secrecy::ExposeSecret;
 use sqlx::PgPool;
+use sqlx::postgres::PgPoolOptions;
 use std::net::TcpListener;
 use zero2prod::configuration::get_configuration;
 use zero2prod::startup::run;
@@ -11,7 +12,10 @@ fn create_listener(host: String, port: u16) -> TcpListener {
 }
 
 fn create_db_pool(connection_string: &str) -> PgPool {
-    PgPool::connect_lazy(connection_string).expect("Failed to connect to the database")
+    PgPoolOptions::new()
+        .acquire_timeout(std::time::Duration::from_secs(2)) 
+        .connect_lazy(connection_string)
+        .expect("Failed to create project database pool")
 }
 
 #[tokio::main]
