@@ -28,5 +28,10 @@ async fn main() -> std::io::Result<()> {
     );
     let db_pool = create_db_pool(configuration.database.with_db());
 
+    sqlx::migrate!("./migrations")
+        .run(&db_pool)
+        .await
+        .expect("Failed to migrate the database");
+
     run(listener, db_pool)?.await
 }

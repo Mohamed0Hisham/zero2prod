@@ -34,17 +34,6 @@ services:
             scope: RUN_TIME
             value: ${newsletter.DATABASE}
 
-jobs:
-    - name: migration-job
-      kind: PRE_DEPLOY # This runs BEFORE the app updates
-      dockerfile_path: Dockerfile
-      # Override the default start command to run migrations instead
-      run_command: sqlx migrate run
-      envs:
-          - key: DATABASE_URL
-            scope: RUN_TIME
-            value: ${newsletter.DATABASE_URL}
-
 databases:
     - engine: PG
       name: newsletter
