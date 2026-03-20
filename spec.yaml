@@ -17,25 +17,6 @@ services:
       instance_size_slug: basic-xxs
       routes:
           - path: /
-      envs:
-          - key: APP_DATABASE__USERNAME
-            scope: RUN_TIME
-            value: ${newsletter.USERNAME}
-          - key: APP_DATABASE__PASSWORD
-            scope: RUN_TIME
-            value: ${newsletter.PASSWORD}
-          - key: APP_DATABASE__HOST
-            scope: RUN_TIME
-            value: ${newsletter.HOST}
-          - key: APP_DATABASE__PORT
-            scope: RUN_TIME
-            value: ${newsletter.PORT}
-          - key: APP_DATABASE__DATABASE_NAME
-            scope: RUN_TIME
-            value: ${newsletter.DATABASE}
 
-databases:
-    - name: newsletter # This MUST match the prefix in your ${newsletter.xxx} vars
-      engine: PG # Your database type (PostgreSQL)
-      cluster_name: truedb-postgresql-fra1-84529 # The actual name of your DB in the DigitalOcean dashboard
-      production: true
+
+
