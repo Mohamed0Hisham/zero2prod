@@ -33,3 +33,9 @@ services:
           - key: APP_DATABASE__DATABASE_NAME
             scope: RUN_TIME
             value: ${newsletter.DATABASE}
+
+databases:
+    - name: newsletter # This MUST match the prefix in your ${newsletter.xxx} vars
+      engine: PG # Your database type (PostgreSQL)
+      cluster_name: truedb-postgresql-fra1-84529 # The actual name of your DB in the DigitalOcean dashboard
+      production: true
