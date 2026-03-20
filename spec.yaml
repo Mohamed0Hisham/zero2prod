@@ -20,22 +20,22 @@ services:
       envs:
           - key: APP_DATABASE__USERNAME
             scope: RUN_TIME
-            value: ${newsletter.USERNAME}
+            value: ${db-postgresql-fra1-84529.USERNAME}
           - key: APP_DATABASE__PASSWORD
             scope: RUN_TIME
-            value: ${newsletter.PASSWORD}
+            value: ${db-postgresql-fra1-84529.PASSWORD}
           - key: APP_DATABASE__HOST
             scope: RUN_TIME
-            value: ${newsletter.HOST}
+            value: ${db-postgresql-fra1-84529.HOST}
           - key: APP_DATABASE__PORT
             scope: RUN_TIME
-            value: ${newsletter.PORT}
+            value: ${db-postgresql-fra1-84529.PORT}
           - key: APP_DATABASE__DATABASE_NAME
             scope: RUN_TIME
-            value: ${newsletter.DATABASE}
+            value: ${db-postgresql-fra1-84529.DATABASE}
 
 databases:
-    - name: newsletter # This MUST match the prefix in your ${newsletter.xxx} vars
+    - name: db-postgresql-fra1-84529 # This MUST match the prefix in your ${newsletter.xxx} vars
       engine: PG # Your database type (PostgreSQL)
-      cluster_name: truedb-postgresql-fra1-84529 # The actual name of your DB in the DigitalOcean dashboard
+      cluster_name: db-postgresql-fra1-84529 # The actual name of your DB in the DigitalOcean dashboard
       production: true
